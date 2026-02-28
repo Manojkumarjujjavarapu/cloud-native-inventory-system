@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-4 fw-bold">Analytics Dashboard</h2>
+
+<div class="row g-4 mb-4">
+
+    <div class="col-md-3">
+        <div class="card p-3 text-center shadow">
+            <h4>{{ user_count }}</h4>
+            <small>Users (SQL)</small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 text-center shadow">
+            <h4>{{ product_count }}</h4>
+            <small>Products (SQL)</small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 text-center shadow">
+            <h4>{{ order_count }}</h4>
+            <small>Orders (SQL)</small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 text-center shadow">
+            <h4>{{ log_count }}</h4>
+            <small>Logs (MongoDB)</small>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="row g-4">
+
+    <div class="col-md-6">
+        <div class="card p-3 shadow">
+            <h5>Products</h5>
+            <ul class="list-group">
+                {% for p in products %}
+                <li class="list-group-item">
+                    {{ p.name }} — ₹{{ p.price }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card p-3 shadow">
+            <h5>Recent Logs (MongoDB)</h5>
+            <ul class="list-group">
+                {% for log in logs %}
+                <li class="list-group-item">
+                    {{ log.action }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="card mt-4 p-3 shadow">
+    <h5>Product Price Chart</h5>
+    <canvas id="priceChart"></canvas>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+    const labels = {{ labels | tojson }};
+    const data = {{ prices | tojson }};
+    
+    new Chart(document.getElementById("priceChart"), {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Price",
+                data: data,
+                backgroundColor: "rgba(54, 162, 235, 0.6)"
+            }]
+        }
+    });
+    
+    </script>
+
+{% endblock %}

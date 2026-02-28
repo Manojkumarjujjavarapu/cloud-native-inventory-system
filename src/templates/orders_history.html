@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-4">Order History</h2>
+
+{% for order in orders %}
+
+<div class="card mb-3 shadow">
+
+    <div class="card-header">
+        Order #{{ order.id }} — {{ order.created_at }}
+    </div>
+
+    <div class="card-body">
+
+        <ul class="list-group">
+
+            {% for item in order.products %}
+            <li class="list-group-item">
+                {{ item.name }}
+                — Qty: {{ item.quantity }}
+                — ₹{{ item.price }}
+            </li>
+            {% endfor %}
+
+        </ul>
+
+    </div>
+
+</div>
+
+{% endfor %}
+
+{% endblock %}

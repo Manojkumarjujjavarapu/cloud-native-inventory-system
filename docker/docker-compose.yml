@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: inventory_app
+    ports:
+      - "5001:5001"
+    depends_on:
+      - postgres
+      - mongo
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/inventory_db
+      - MONGO_URI=mongodb://mongo:27017/inventory_logs
+    volumes:
+      - ..:/app
+
+  postgres:
+    image: postgres:15
+    container_name: inventory_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:7
+    container_name: inventory_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  pgdata:
+  mongodata:
