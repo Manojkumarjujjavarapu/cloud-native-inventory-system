@@ -3,19 +3,20 @@ from flask import Flask, render_template
 from sqlalchemy.exc import OperationalError
 
 from config import Config
-from extensions import db, mongo
+from extensions import db, mongo, jwt
 
-# Import Models
+# Models
 from models.user import User
 from models.product import Product
-from models.order import Order, OrderItem
+from models.order import Order
 from models.inventory import Inventory
 
-# Import Blueprints
+# Blueprints
 from routes.user_routes import user_bp
 from routes.log_routes import log_bp
 from routes.product_routes import product_bp
 from routes.order_routes import order_bp
+from routes.auth_routes import auth_bp
 
 
 def create_app():
@@ -25,12 +26,14 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     mongo.init_app(app)
+    jwt.init_app(app)
 
     # Register Blueprints
     app.register_blueprint(user_bp)
     app.register_blueprint(log_bp)
     app.register_blueprint(product_bp)
     app.register_blueprint(order_bp)
+    app.register_blueprint(auth_bp)
 
     # ======================
     # Database Connection Retry (Docker Safe)
@@ -69,7 +72,6 @@ def create_app():
             mongo.db.logs.find().sort("timestamp", -1).limit(10)
         )
 
-        # Chart Data
         labels = [p.name for p in products]
         prices = [float(p.price) for p in products]
 
@@ -129,6 +131,20 @@ def create_app():
             "orders_history.html",
             orders=order_data
         )
+
+    # ======================
+    # Auth Pages (NEW)
+    # ======================
+
+    @app.route("/login")
+    def login_page():
+        return render_template("login.html")
+
+
+    @app.route("/register")
+    def register_page():
+        return render_template("register.html")
+
 
     # ======================
     # Health Check

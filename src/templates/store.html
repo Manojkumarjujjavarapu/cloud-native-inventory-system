@@ -2,10 +2,23 @@
 
 {% block content %}
 
-<div class="text-center mb-4">
-    <h2 class="fw-bold">Online Store</h2>
-    <p class="text-muted">Browse products and place orders</p>
+<!-- Header + Add Product Button -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h2 class="fw-bold">Online Store</h2>
+        <p class="text-muted mb-0">Browse products and place orders</p>
+    </div>
+
+    <button id="addProductBtn" 
+            onclick="location.href='/products/add'"
+            class="btn btn-primary shadow"
+            style="display:none;">
+        ➕ Add Product
+    </button>
+
 </div>
+
 
 <div class="row g-4">
 
@@ -39,11 +52,11 @@
 
             <!-- Buy Button -->
             <button 
-            data-id="{{ p.id }}"
-            onclick="buyProduct(this)"
-            class="btn btn-success w-100 mt-auto">
-            🛒 Buy Now
-        </button>
+                data-id="{{ p.id }}"
+                onclick="buyProduct(this)"
+                class="btn btn-success w-100 mt-auto">
+                🛒 Buy Now
+            </button>
 
         </div>
 
@@ -58,42 +71,65 @@
 
 <script>
 
-    function buyProduct(button) {
-    
-        const productId = button.getAttribute("data-id");
-    
-        fetch("/orders", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                user_id: 1,
-                items: [
-                    {
-                        product_id: parseInt(productId),
-                        quantity: 1
-                    }
-                ]
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
+function buyProduct(button) {
 
-if (data.order_id) {
-    alert("✅ Order Created! ID: " + data.order_id);
-    location.reload();
-} else {
-    alert("❌ " + (data.error || "Failed to create order"));
+    const productId = button.getAttribute("data-id");
+
+    fetch("/orders", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            user_id: 1,
+            items: [
+                {
+                    product_id: parseInt(productId),
+                    quantity: 1
+                }
+            ]
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.order_id) {
+            alert("✅ Order Created! ID: " + data.order_id);
+            location.reload();
+        } else {
+            alert("❌ " + (data.error || "Failed to create order"));
+        }
+
+    })
+    .catch(err => {
+        alert("⚠️ Error creating order");
+        console.error(err);
+    });
+
 }
 
-})
-        .catch(err => {
-            alert("⚠️ Error creating order");
-            console.error(err);
-        });
+</script>
+<script>
+
+    const role = localStorage.getItem("role");
     
+    if (role === "admin") {
+        document.getElementById("addProductBtn").style.display = "block";
     }
+    
+    </script>
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+    
+        const role = localStorage.getItem("role");
+    
+        if (role === "admin") {
+            const btn = document.getElementById("addProductBtn");
+            if (btn) btn.style.display = "block";
+        }
+    
+    });
     
     </script>
 

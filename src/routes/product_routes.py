@@ -1,14 +1,19 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template, redirect
 from extensions import db
 from models.product import Product
 from models.inventory import Inventory
 from services.log_service import log_activity
+from utils.auth import admin_required
+
 
 product_bp = Blueprint("products", __name__)
 
- 
-# Create Product
+
+# =========================
+# API — Create Product
+# =========================
 @product_bp.route("/products", methods=["POST"])
+@admin_required
 def create_product():
     data = request.json
 
@@ -21,7 +26,6 @@ def create_product():
     db.session.add(product)
     db.session.commit()
 
-    # Create inventory record
     inventory = Inventory(
         product_id=product.id,
         stock=data.get("stock", 0)
@@ -35,14 +39,18 @@ def create_product():
     return jsonify(product.to_dict()), 201
 
 
-# Get Products
+# =========================
+# API — Get Products
+# =========================
 @product_bp.route("/products", methods=["GET"])
 def get_products():
     products = Product.query.all()
     return jsonify([p.to_dict() for p in products])
 
 
-# Update Product Price
+# =========================
+# API — Update Product
+# =========================
 @product_bp.route("/products/<int:product_id>", methods=["PUT"])
 def update_product(product_id):
     product = Product.query.get_or_404(product_id)
@@ -57,7 +65,9 @@ def update_product(product_id):
     return jsonify(product.to_dict())
 
 
-# Delete Product
+# =========================
+# API — Delete Product
+# =========================
 @product_bp.route("/products/<int:product_id>", methods=["DELETE"])
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
@@ -68,3 +78,44 @@ def delete_product(product_id):
     log_activity("DELETE_PRODUCT", {"product_id": product_id})
 
     return {"message": "Product deleted"}
+
+
+# =========================
+# UI — Add Product Page
+# =========================
+@product_bp.route("/products/add", methods=["GET"])
+def add_product_page():
+    return render_template("add_product.html")
+
+
+# =========================
+# UI — Save Product from Form
+# =========================
+@product_bp.route("/products/add", methods=["POST"])
+def add_product():
+
+    name = request.form["name"]
+    price = float(request.form["price"])
+    stock = int(request.form["stock"])
+    image_url = request.form.get("image_url")
+
+    product = Product(
+        name=name,
+        price=price,
+        image_url=image_url
+    )
+
+    db.session.add(product)
+    db.session.commit()
+
+    inventory = Inventory(
+        product_id=product.id,
+        stock=stock
+    )
+
+    db.session.add(inventory)
+    db.session.commit()
+
+    log_activity("CREATE_PRODUCT_UI", {"name": name})
+
+    return redirect("/store")

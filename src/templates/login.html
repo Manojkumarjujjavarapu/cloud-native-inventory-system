@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container" style="max-width:400px;">
+
+    <h3 class="mb-4 fw-bold text-center">🔐 Login</h3>
+
+    <form id="loginForm">
+
+        <div class="mb-3">
+            <label>Email</label>
+            <input type="email" id="email" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Password</label>
+            <input type="password" id="password" class="form-control" required>
+        </div>
+
+        <button class="btn btn-primary w-100">
+            Login
+        </button>
+
+    </form>
+
+</div>
+
+
+<script>
+
+document.getElementById("loginForm").addEventListener("submit", function(e) {
+
+    e.preventDefault();
+
+    fetch("/auth/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.access_token) {
+
+            localStorage.setItem("token", data.access_token);
+            localStorage.setItem("role", data.role);
+            localStorage.setItem("username",data.username);
+            window.location.href = "/";
+
+        } else {
+            alert("Invalid login");
+        }
+
+    });
+
+});
+
+</script>
+
+{% endblock %}
