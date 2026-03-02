@@ -19,9 +19,16 @@ from routes.order_routes import order_bp
 from routes.auth_routes import auth_bp
 
 
-def create_app():
+def create_app(test_config=None):
+
     app = Flask(__name__)
+
+    # Load default config
     app.config.from_object(Config)
+
+    # Override config if testing
+    if test_config:
+        app.config.update(test_config)
 
     # Initialize extensions
     db.init_app(app)
@@ -36,29 +43,34 @@ def create_app():
     app.register_blueprint(auth_bp)
 
     # ======================
-    # Database Connection Retry (Docker Safe)
+    # Database Initialization
     # ======================
 
     with app.app_context():
 
-        retries = 10
+        if app.config.get("TESTING"):
+            db.create_all()
 
-        while retries > 0:
-            try:
-                db.create_all()
-                print("✅ Database connected successfully")
-                break
+        else:
 
-            except OperationalError:
-                retries -= 1
-                print("⏳ Waiting for database...")
-                time.sleep(3)
+            retries = 10
 
-        if retries == 0:
-            print("❌ Database connection failed")
+            while retries > 0:
+                try:
+                    db.create_all()
+                    print("✅ Database connected successfully")
+                    break
+
+                except OperationalError:
+                    retries -= 1
+                    print("⏳ Waiting for database...")
+                    time.sleep(3)
+
+            if retries == 0:
+                print("❌ Database connection failed")
 
     # ======================
-    # Dashboard
+    # Routes
     # ======================
 
     @app.route("/")
@@ -89,18 +101,10 @@ def create_app():
             log_count=mongo.db.logs.count_documents({})
         )
 
-    # ======================
-    # Store Page
-    # ======================
-
     @app.route("/store")
     def store():
         products = Product.query.all()
         return render_template("store.html", products=products)
-
-    # ======================
-    # Orders History
-    # ======================
 
     @app.route("/orders-history")
     def orders_history():
@@ -132,23 +136,13 @@ def create_app():
             orders=order_data
         )
 
-    # ======================
-    # Auth Pages (NEW)
-    # ======================
-
     @app.route("/login")
     def login_page():
         return render_template("login.html")
 
-
     @app.route("/register")
     def register_page():
         return render_template("register.html")
-
-
-    # ======================
-    # Health Check
-    # ======================
 
     @app.route("/health")
     def health():
